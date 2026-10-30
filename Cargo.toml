@@ -1,0 +1,60 @@
+[package]
+name = "models-catalog"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Production-grade LLM model and provider catalog normalizer, disk spooler, and runtime token/reasoning calculator with @cline/llms parity."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/wolff/models-catalog"
+keywords = ["llm", "models-dev", "cline", "catalog", "ai"]
+categories = ["api-bindings", "caching", "config"]
+
+[features]
+default = ["reqwest-client", "disk-spool", "cline", "bundled"]
+
+# Async HTTP fetching via reqwest + tokio, singleflight coalescing, and rate limiting
+reqwest-client = ["dep:reqwest", "dep:tokio", "dep:rand"]
+
+# Atomic disk caching, ETag persistence, and XDG default directory resolution
+disk-spool = ["dep:tokio", "dep:directories"]
+
+# Cline-specific enrichments: BUILTIN_SPEC_OVERRIDES, api.cline.bot recommended/ClinePass
+# feed normalizer, and ~/.cline/data/settings/providers.json config reader
+cline = []
+
+# Embeds a compressed compile-time fallback catalog snapshot via include_bytes!
+bundled = ["dep:flate2"]
+
+# Derives ts-rs TypeScript interface bindings on public catalog types
+ts-bindings = ["dep:ts-rs"]
+
+# Builds the `models-catalog` CLI binary
+cli = ["reqwest-client", "disk-spool", "cline", "bundled", "dep:clap"]
+
+[[bin]]
+name = "models-catalog"
+path = "src/bin/main.rs"
+required-features = ["cli"]
+
+[dependencies]
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+chrono = { version = "0.4.45", features = ["serde"] }
+
+# Optional dependencies gated by features
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "gzip", "brotli", "rustls", "http2", "charset", "system-proxy"], optional = true }
+tokio = { version = "1.54.1", features = ["sync", "fs", "time", "macros", "rt", "rt-multi-thread"], optional = true }
+directories = { version = "6.0.0", optional = true }
+flate2 = { version = "1.1.10", optional = true }
+rand = { version = "0.10.3", optional = true }
+ts-rs = { version = "12.0.1", features = ["chrono-impl", "serde-json-impl"], optional = true }
+clap = { version = "4.6.7", features = ["derive"], optional = true }
+
+[dev-dependencies]
+wiremock = "0.6.5"
+tempfile = "3.27.0"
+similar-asserts = "2.0.0"
+tokio = { version = "1.54.1", features = ["sync", "fs", "time", "macros", "rt", "rt-multi-thread"] }
+flate2 = "1.1.10"
