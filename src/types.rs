@@ -32,7 +32,9 @@ pub struct SourceStatus {
 }
 
 /// Wire protocol family used by an LLM provider.
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[cfg_attr(feature = "ts-bindings", derive(ts_rs::TS))]
 #[cfg_attr(feature = "ts-bindings", ts(export))]
 #[serde(rename_all = "snake_case")]

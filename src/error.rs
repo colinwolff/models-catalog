@@ -23,7 +23,9 @@ pub enum CatalogError {
     #[error(transparent)]
     ContextOverflow(#[from] ContextOverflowError),
 
-    #[error("rate limited: upstream `{source_name}` is within refresh cooldown until {retry_after}")]
+    #[error(
+        "rate limited: upstream `{source_name}` is within refresh cooldown until {retry_after}"
+    )]
     RateLimited {
         source_name: String,
         retry_after: DateTime<Utc>,
@@ -45,10 +47,7 @@ pub enum CatalogError {
     },
 
     #[error("http status {status} fetching `{source_name}`")]
-    HttpStatus {
-        source_name: String,
-        status: u16,
-    },
+    HttpStatus { source_name: String, status: u16 },
 
     #[error("io error at `{path}`: {source}")]
     Io {

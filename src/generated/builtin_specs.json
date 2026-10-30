@@ -1,0 +1,156 @@
+{
+  "anthropic": {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "protocol": "anthropic",
+    "base_url": "https://api.anthropic.com/v1",
+    "env_vars": ["ANTHROPIC_API_KEY"],
+    "default_model_id": "claude-sonnet-5",
+    "requires_streaming": false
+  },
+  "openrouter": {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://openrouter.ai/api/v1",
+    "env_vars": ["OPENROUTER_API_KEY"],
+    "default_model_id": "anthropic/claude-sonnet-5",
+    "requires_streaming": false
+  },
+  "bedrock": {
+    "id": "bedrock",
+    "name": "Amazon Bedrock",
+    "protocol": "bedrock",
+    "base_url": null,
+    "env_vars": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+    "default_model_id": "minimax.minimax-m2.5",
+    "requires_streaming": false
+  },
+  "amazon-bedrock": {
+    "id": "amazon-bedrock",
+    "name": "Amazon Bedrock",
+    "protocol": "bedrock",
+    "base_url": null,
+    "env_vars": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+    "default_model_id": "minimax.minimax-m2.5",
+    "requires_streaming": false
+  },
+  "openai-native": {
+    "id": "openai-native",
+    "name": "OpenAI",
+    "protocol": "open_ai_responses",
+    "base_url": "https://api.openai.com/v1",
+    "env_vars": ["OPENAI_API_KEY"],
+    "default_model_id": "gpt-5.4",
+    "requires_streaming": false
+  },
+  "openai": {
+    "id": "openai",
+    "name": "OpenAI",
+    "protocol": "open_ai_responses",
+    "base_url": "https://api.openai.com/v1",
+    "env_vars": ["OPENAI_API_KEY"],
+    "default_model_id": "gpt-5.4",
+    "requires_streaming": false
+  },
+  "zai": {
+    "id": "zai",
+    "name": "Z.AI (Zhipu)",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://api.z.ai/api/paas/v4",
+    "env_vars": ["ZAI_API_KEY"],
+    "default_model_id": "zai-org/glm-5.3",
+    "requires_streaming": false
+  },
+  "aihubmix": {
+    "id": "aihubmix",
+    "name": "AIHubMix",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://aihubmix.com/v1",
+    "env_vars": ["AIHUBMIX_API_KEY"],
+    "default_model_id": "claude-sonnet-4-5",
+    "requires_streaming": false
+  },
+  "kilo": {
+    "id": "kilo",
+    "name": "Kilo",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://api.kilocode.ai/v1",
+    "env_vars": ["KILO_API_KEY"],
+    "default_model_id": "anthropic/claude-sonnet-5",
+    "requires_streaming": false
+  },
+  "opencode": {
+    "id": "opencode",
+    "name": "OpenCode",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://opencode.ai/zen/v1",
+    "env_vars": ["OPENCODE_API_KEY"],
+    "default_model_id": "claude-sonnet-5",
+    "requires_streaming": false
+  },
+  "vercel-ai-gateway": {
+    "id": "vercel-ai-gateway",
+    "name": "Vercel AI Gateway",
+    "protocol": "open_ai_compatible",
+    "base_url": "https://ai-gateway.vercel.sh/v1",
+    "env_vars": ["AI_GATEWAY_API_KEY"],
+    "default_model_id": "anthropic/claude-sonnet-5",
+    "requires_streaming": false
+  },
+  "cline-pass": {
+    "id": "cline-pass",
+    "name": "ClinePass",
+    "protocol": "cline_pass",
+    "base_url": "https://api.cline.bot/api/v1",
+    "env_vars": ["CLINE_API_KEY"],
+    "default_model_id": "cline-pass/anthropic/claude-sonnet-5",
+    "requires_streaming": true
+  },
+  "cline": {
+    "id": "cline",
+    "name": "Cline",
+    "protocol": "cline_pass",
+    "base_url": "https://api.cline.bot/api/v1",
+    "env_vars": ["CLINE_API_KEY"],
+    "default_model_id": "cline-pass/anthropic/claude-sonnet-5",
+    "requires_streaming": true
+  },
+  "google": {
+    "id": "google",
+    "name": "Google Gemini",
+    "protocol": "google",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta",
+    "env_vars": ["GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
+    "default_model_id": "gemini-2.5-pro",
+    "requires_streaming": false
+  },
+  "vertex": {
+    "id": "vertex",
+    "name": "Google Vertex AI",
+    "protocol": "vertex",
+    "base_url": null,
+    "env_vars": ["GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CLOUD_PROJECT"],
+    "default_model_id": "gemini-2.5-pro",
+    "requires_streaming": false
+  },
+  "google-vertex": {
+    "id": "google-vertex",
+    "name": "Google Vertex AI",
+    "protocol": "vertex",
+    "base_url": null,
+    "env_vars": ["GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CLOUD_PROJECT"],
+    "default_model_id": "gemini-2.5-pro",
+    "requires_streaming": false
+  },
+  "ollama": {
+    "id": "ollama",
+    "name": "Ollama",
+    "protocol": "ollama",
+    "base_url": "http://localhost:11434/v1",
+    "env_vars": [],
+    "default_model_id": null,
+    "requires_streaming": false
+  }
+}
+
