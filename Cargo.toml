@@ -5,9 +5,23 @@ edition = "2024"
 rust-version = "1.85"
 description = "Production-grade LLM model and provider catalog normalizer, disk spooler, and runtime token/reasoning calculator with @cline/llms parity."
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/wolff/models-catalog"
+readme = "README.md"
+homepage = "https://github.com/colinwolff/models-catalog"
+repository = "https://github.com/colinwolff/models-catalog"
+documentation = "https://docs.rs/models-catalog"
 keywords = ["llm", "models-dev", "cline", "catalog", "ai"]
 categories = ["api-bindings", "caching", "config"]
+exclude = [
+    ".github/",
+    "parity-harness/",
+    "docs/",
+    ".miter/",
+    ".gaugeblock/",
+]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
 default = ["reqwest-client", "disk-spool", "cline", "bundled"]

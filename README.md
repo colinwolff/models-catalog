@@ -162,7 +162,9 @@ cargo run --features cli -- check-local-config
 
 ## Documentation Map
 
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — Guide to adding new **Vendor Plugins** (`src/vendors/<vendor>/`), implementing `VendorPlugin`, and running verification checks.
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — System architecture, module layout, core data structures, per-source disk spooling, SWR + singleflight state machine, and graceful degradation.
 - [`docs/NORMALIZATION_AND_PARITY.md`](./docs/NORMALIZATION_AND_PARITY.md) — Exact `@cline/llms` normalization rules, token/reasoning algorithms, 3-layer default resolution, lookup aliasing, and the automated TypeScript oracle parity harness.
 - [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md) — Step-by-step build sequence, verification gates, and test suite specification.
+- [`CHANGELOG.md`](./CHANGELOG.md) — Release history.
 
