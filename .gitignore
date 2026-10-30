@@ -1,0 +1,4 @@
+/target
+/bindings
+/parity-harness/node_modules
+.DS_Store
