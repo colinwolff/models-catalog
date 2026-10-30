@@ -355,6 +355,62 @@ fn flexible_lookup_overrides_and_local_config_validation() {
     );
 }
 
+#[test]
+fn custom_vendor_plugin_enriches_catalog_via_trait() {
+    use models_catalog::{
+        CatalogError, ProviderSpec, VendorFeedSpec, VendorPlugin, build_catalog_with_vendors,
+    };
+    use std::collections::BTreeMap;
+
+    #[derive(Debug)]
+    struct CustomEnterpriseVendor;
+
+    impl VendorPlugin for CustomEnterpriseVendor {
+        fn id(&self) -> &'static str {
+            "enterprise"
+        }
+
+        fn upstream_feed(&self) -> Option<VendorFeedSpec> {
+            Some(VendorFeedSpec {
+                source_name: "enterprise_curated".to_string(),
+                url: "https://internal.example/models.json".to_string(),
+            })
+        }
+
+        fn apply_overlay(
+            &self,
+            raw_feed_json: Option<&str>,
+            providers: &mut BTreeMap<String, ProviderSpec>,
+        ) -> Result<(), CatalogError> {
+            if let Some(model_id) = raw_feed_json {
+                if let Some(anthropic) = providers.get_mut("anthropic") {
+                    if let Some(m) = anthropic.models.get_mut(model_id.trim()) {
+                        m.is_recommended = true;
+                        m.billing_tier = Some(BillingTier::Subscription);
+                    }
+                }
+            }
+            Ok(())
+        }
+    }
+
+    let models_dev_json = include_str!("fixtures/models-dev.sample.json");
+    let vendor = CustomEnterpriseVendor;
+    let snap = build_catalog_with_vendors(
+        models_dev_json,
+        &[(&vendor, Some("claude-sonnet-4-5"))],
+        true,
+    )
+    .expect("build with custom vendor");
+
+    assert!(snap.sources.contains_key("enterprise_curated"));
+    let m = snap
+        .get_model("anthropic", "claude-sonnet-4-5")
+        .expect("sonnet 4.5 exists");
+    assert!(m.is_recommended);
+    assert_eq!(m.billing_tier, Some(BillingTier::Subscription));
+}
+
 #[cfg(feature = "ts-bindings")]
 #[test]
 fn export_typescript_bindings_to_bindings_directory() {

@@ -1,7 +1,5 @@
 use std::collections::BTreeMap;
 
-use crate::builtins::get_builtin_override;
-use crate::normalize::cline_feed::{RawClineModelEntry, RawClineRecommendedFeed};
 use crate::normalize::limits::{
     DEFAULT_MAX_INPUT_TOKENS, DEFAULT_MAX_TOKENS, resolve_context_window, resolve_max_input_tokens,
     resolve_max_output_tokens,
@@ -13,6 +11,8 @@ use crate::normalize::resolution::{
 use crate::types::{
     BillingTier, Cost, Limit, ModelInfo, ProviderProtocol, ProviderSpec, ReasoningEffort,
 };
+use crate::vendors::cline::builtins::get_builtin_override;
+use crate::vendors::cline::feed::{RawClineModelEntry, RawClineRecommendedFeed};
 
 pub(crate) fn merge_cline_feed_impl(
     feed: RawClineRecommendedFeed,

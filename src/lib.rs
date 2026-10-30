@@ -1,7 +1,7 @@
 //! # `models-catalog`
 //!
 //! Production-grade LLM model and provider catalog normalizer, disk spooler,
-//! and runtime token/reasoning calculator with `@cline/llms` parity.
+//! and runtime token/reasoning calculator with pluggable vendor overlays and `@cline/llms` parity.
 
 pub mod builtins;
 #[cfg(feature = "bundled")]
@@ -15,6 +15,7 @@ pub mod reasoning;
 #[cfg(any(feature = "reqwest-client", feature = "disk-spool"))]
 pub mod spool;
 pub mod types;
+pub mod vendors;
 
 pub use builtins::{
     BuiltinProviderOverride, builtin_spec_overrides, get_builtin_override, infer_provider_protocol,
@@ -33,7 +34,7 @@ pub use local_settings::{
 };
 pub use lookup::merge_overrides;
 pub use normalize::{
-    build_catalog_snapshot,
+    build_catalog_snapshot, build_catalog_with_vendors,
     limits::{
         DEFAULT_GATEWAY_MAX_OUTPUT_TOKENS, DEFAULT_MAX_INPUT_TOKENS, DEFAULT_MAX_TOKENS,
         GATEWAY_OUTPUT_RESERVE_TOKENS, resolve_context_window, resolve_max_input_tokens,
@@ -51,3 +52,4 @@ pub use types::{
     Modality, ModelInfo, ModelOverrides, ProviderProtocol, ProviderSpec, ReasoningEffort,
     SourceStatus, WireReasoningParams,
 };
+pub use vendors::{VendorFeedSpec, VendorPlugin, cline::ClineVendor, default_vendors};

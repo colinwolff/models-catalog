@@ -1,5 +1,9 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
+
+use crate::vendors::VendorPlugin;
+use crate::vendors::cline::ClineVendor;
 
 /// Default `models.dev` public API endpoint.
 pub const DEFAULT_MODELS_DEV_URL: &str = "https://models.dev/api.json";
@@ -51,8 +55,9 @@ impl Default for RateLimitConfig {
     }
 }
 
-/// Complete configuration for `CatalogManager` memory caching, disk spooling, and rate limiting.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Complete configuration for `CatalogManager` memory caching, disk spooling, rate limiting,
+/// and pluggable vendor overlays.
+#[derive(Debug, Clone)]
 pub struct SpoolConfig {
     /// Duration an in-memory snapshot stays fresh before triggering revalidation (default: 15 mins).
     pub memory_ttl: Duration,
@@ -71,6 +76,8 @@ pub struct SpoolConfig {
     pub urls: UpstreamUrls,
     /// Rate limit and retry configuration.
     pub rate_limit: RateLimitConfig,
+    /// Additional registered vendor plugins layered after built-in vendor overlays.
+    pub custom_vendors: Vec<Arc<dyn VendorPlugin>>,
 }
 
 impl Default for SpoolConfig {
@@ -84,7 +91,22 @@ impl Default for SpoolConfig {
             use_bundled_fallback: cfg!(feature = "bundled"),
             urls: UpstreamUrls::default(),
             rate_limit: RateLimitConfig::default(),
+            custom_vendors: Vec::new(),
         }
+    }
+}
+
+impl SpoolConfig {
+    /// Returns the ordered list of active [`VendorPlugin`] overlays for this configuration.
+    pub fn effective_vendors(&self) -> Vec<Arc<dyn VendorPlugin>> {
+        let mut list: Vec<Arc<dyn VendorPlugin>> = Vec::new();
+        if self.enable_cline_feed {
+            list.push(Arc::new(ClineVendor::with_feed_url(
+                self.urls.cline_recommended_url.clone(),
+            )));
+        }
+        list.extend(self.custom_vendors.iter().cloned());
+        list
     }
 }
 

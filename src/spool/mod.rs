@@ -189,6 +189,21 @@ impl CatalogManagerBuilder {
         self
     }
 
+    /// Registers an additional [`crate::vendors::VendorPlugin`] overlay to fetch and merge.
+    pub fn with_vendor(mut self, vendor: Arc<dyn crate::vendors::VendorPlugin>) -> Self {
+        self.config.custom_vendors.push(vendor);
+        self
+    }
+
+    /// Replaces the custom vendor plugin list.
+    pub fn with_custom_vendors(
+        mut self,
+        vendors: Vec<Arc<dyn crate::vendors::VendorPlugin>>,
+    ) -> Self {
+        self.config.custom_vendors = vendors;
+        self
+    }
+
     pub fn build(self) -> Result<CatalogManager, CatalogError> {
         CatalogManager::new(self.config)
     }

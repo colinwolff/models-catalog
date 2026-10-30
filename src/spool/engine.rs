@@ -7,7 +7,7 @@ use tracing::{debug, info, warn};
 
 use crate::config::SpoolConfig;
 use crate::error::CatalogError;
-use crate::normalize::{cline_feed, models_dev};
+use crate::normalize::models_dev;
 #[cfg(feature = "reqwest-client")]
 use crate::spool::limiter;
 use crate::spool::{
@@ -18,7 +18,6 @@ use crate::spool::{
 use crate::types::{CATALOG_SCHEMA_VERSION, CatalogSnapshot, DataOrigin, SourceStatus};
 
 const SOURCE_MODELS_DEV: &str = "models_dev";
-const SOURCE_CLINE_RECOMMENDED: &str = "cline_recommended";
 
 #[derive(Debug, Clone)]
 pub(crate) enum SharedFlightError {
@@ -170,18 +169,14 @@ impl CatalogManagerInner {
     async fn perform_refresh(&self, force: bool) -> Result<Arc<CatalogSnapshot>, CatalogError> {
         let mut meta = self.load_meta().await;
         let cached_models_dev = self.load_source(SOURCE_MODELS_DEV).await;
-        let cached_cline = if self.config.enable_cline_feed {
-            self.load_source(SOURCE_CLINE_RECOMMENDED).await
-        } else {
-            None
-        };
         let cached_catalog = self.load_cached_catalog().await;
+        let active_vendors = self.config.effective_vendors();
 
-        let mut models_dev_changed = false;
-        let mut cline_changed = false;
+        let mut any_source_changed = false;
         let mut degraded = false;
         let mut sources_status = BTreeMap::new();
 
+        // 1. Refresh base `models.dev` feed
         let (effective_models_dev_body, md_changed, md_degraded) = self
             .refresh_source_step(
                 SOURCE_MODELS_DEV,
@@ -193,31 +188,43 @@ impl CatalogManagerInner {
                 &mut sources_status,
             )
             .await?;
-        models_dev_changed |= md_changed;
+        any_source_changed |= md_changed;
         degraded |= md_degraded;
 
-        let effective_cline_body = if self.config.enable_cline_feed {
-            let (body, cf_changed, cf_degraded) = self
-                .refresh_source_step(
-                    SOURCE_CLINE_RECOMMENDED,
-                    &self.config.urls.cline_recommended_url,
-                    &mut meta,
-                    cached_cline,
-                    cached_catalog.is_some(),
-                    force,
-                    &mut sources_status,
-                )
-                .await?;
-            cline_changed |= cf_changed;
-            degraded |= cf_degraded;
-            body
-        } else {
-            None
-        };
+        // 2. Refresh each registered VendorPlugin's upstream feed (if any)
+        let mut vendor_payloads: Vec<(
+            Arc<dyn crate::vendors::VendorPlugin>,
+            Option<String>,
+            Option<String>,
+        )> = Vec::with_capacity(active_vendors.len());
+
+        for vendor in active_vendors {
+            if let Some(feed_spec) = vendor.upstream_feed() {
+                let cached_vendor_body = self.load_source(&feed_spec.source_name).await;
+                let (body, v_changed, v_degraded) = self
+                    .refresh_source_step(
+                        &feed_spec.source_name,
+                        &feed_spec.url,
+                        &mut meta,
+                        cached_vendor_body,
+                        cached_catalog.is_some(),
+                        force,
+                        &mut sources_status,
+                    )
+                    .await?;
+                any_source_changed |= v_changed;
+                degraded |= v_degraded;
+                vendor_payloads.push((vendor, Some(feed_spec.source_name), body));
+            } else {
+                vendor_payloads.push((vendor, None, None));
+            }
+        }
 
         self.save_meta(&meta).await?;
 
-        if !models_dev_changed && !cline_changed {
+        // Fast path: if no source changed (e.g., 304 Not Modified or Cooldown/DiskFresh)
+        // and we have a cached snapshot, return it without re-parsing!
+        if !any_source_changed {
             if let Some(mut existing_snap) = cached_catalog {
                 info!("using existing catalog snapshot without re-parsing JSON payload");
                 for (k, v) in sources_status {
@@ -231,17 +238,22 @@ impl CatalogManagerInner {
         }
 
         if let Some(md_json) = effective_models_dev_body {
-            let mut providers = models_dev::parse_and_normalize_models_dev(
-                &md_json,
-                cfg!(feature = "cline") || self.config.enable_cline_feed,
-            )?;
+            let apply_builtins = cfg!(feature = "cline") || !vendor_payloads.is_empty();
+            let mut providers =
+                models_dev::parse_and_normalize_models_dev(&md_json, apply_builtins)?;
 
-            if let Some(cf_json) = effective_cline_body {
-                if let Err(err) = cline_feed::parse_and_merge_cline_feed(&cf_json, &mut providers) {
-                    warn!(error = %err, "failed to parse cline_recommended feed; continuing with base catalog");
+            for (vendor, source_key, body) in vendor_payloads {
+                if let Err(err) = vendor.apply_overlay(body.as_deref(), &mut providers) {
+                    warn!(
+                        vendor = vendor.id(),
+                        error = %err,
+                        "failed to apply vendor overlay; continuing with base catalog"
+                    );
                     degraded = true;
-                    if let Some(st) = sources_status.get_mut(SOURCE_CLINE_RECOMMENDED) {
-                        st.warning = Some(err.to_string());
+                    if let Some(key) = source_key {
+                        if let Some(st) = sources_status.get_mut(&key) {
+                            st.warning = Some(err.to_string());
+                        }
                     }
                 }
             }
