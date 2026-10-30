@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>models-catalog Explorer — LLM Provider &amp; Model Registry</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">RUST CRATE</span>
+        <h1>models-catalog <span class="brand-sub">Explorer</span></h1>
+      </div>
+      <div class="meta-bar" id="catalog-meta">
+        <span class="meta-pill">Loading catalog...</span>
+      </div>
+      <div class="nav-links">
+        <a href="https://docs.rs/models-catalog" target="_blank" rel="noopener">docs.rs</a>
+        <a href="https://crates.io/crates/models-catalog" target="_blank" rel="noopener">crates.io</a>
+        <a href="https://github.com/colinwolff/models-catalog" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls-card">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <input
+            type="search"
+            id="search-input"
+            placeholder="Search models by ID, name, provider, or family (e.g. claude-sonnet-5, minimax, gpt-image)..."
+            autocomplete="off"
+          />
+        </div>
+        <div class="select-wrap">
+          <label for="provider-select">Provider</label>
+          <select id="provider-select">
+            <option value="">All Providers</option>
+          </select>
+        </div>
+        <div class="select-wrap">
+          <label for="sort-select">Sort By</label>
+          <select id="sort-select">
+            <option value="release_desc">Release Date (Newest)</option>
+            <option value="context_desc">Context Window (High → Low)</option>
+            <option value="output_desc">Max Output (High → Low)</option>
+            <option value="cost_asc">Input Cost (Low → High)</option>
+            <option value="id_asc">Model ID (A → Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filters-row">
+        <div class="chip-group">
+          <button type="button" class="filter-chip" data-filter="recommended">★ Recommended</button>
+          <button type="button" class="filter-chip" data-filter="cline_pass">⚡ ClinePass (Subscription)</button>
+          <button type="button" class="filter-chip" data-filter="free">Free Tier</button>
+          <button type="button" class="filter-chip" data-filter="chat_only">Chat Models (`is_chat_model`)</button>
+          <button type="button" class="filter-chip" data-filter="reasoning">Reasoning Support</button>
+          <button type="button" class="filter-chip" data-filter="tool_call">Tool Calling</button>
+        </div>
+        <div class="results-count" id="results-count">0 models</div>
+      </div>
+
+      <div class="provider-banner hidden" id="provider-banner"></div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="table-card">
+        <div class="table-scroll">
+          <table class="models-table">
+            <thead>
+              <tr>
+                <th>Provider / Model</th>
+                <th>Context / Input / Output</th>
+                <th>Modalities (In → Out)</th>
+                <th>Reasoning</th>
+                <th>Cost (USD / 1M)</th>
+                <th>Release</th>
+              </tr>
+            </thead>
+            <tbody id="models-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="inspector-card" id="inspector-panel">
+        <div class="inspector-empty" id="inspector-empty">
+          <h3>Interactive Gateway &amp; Wire Inspector</h3>
+          <p>Select any model row to inspect its normalized metadata, simulate <code>resolve_gateway_max_output_tokens()</code>, and preview provider wire reasoning parameters.</p>
+        </div>
+        <div class="inspector-content hidden" id="inspector-content"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>

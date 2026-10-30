@@ -15,6 +15,7 @@ exclude = [
     ".github/",
     "parity-harness/",
     "docs/",
+    "site/",
     ".miter/",
     ".gaugeblock/",
 ]
