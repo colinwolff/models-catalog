@@ -45,6 +45,7 @@ pub(crate) fn merge_cline_feed_impl(
         upsert_curated_model(providers, &raw_id, &entry, BillingTier::Free, false, false);
     }
 
+    let mut active_cline_pass_ids = std::collections::BTreeSet::new();
     for entry in feed.cline_pass.into_entries() {
         let Some(raw_id) = entry.id.as_deref().map(str::trim).filter(|s| !s.is_empty()) else {
             continue;
@@ -54,6 +55,7 @@ pub(crate) fn merge_cline_feed_impl(
         } else {
             format!("cline-pass/{raw_id}")
         };
+        active_cline_pass_ids.insert(wire_id.clone());
         upsert_curated_model(
             providers,
             &wire_id,
@@ -62,6 +64,16 @@ pub(crate) fn merge_cline_feed_impl(
             false,
             true,
         );
+    }
+
+    if !active_cline_pass_ids.is_empty() {
+        for provider_id in ["cline-pass", "cline"] {
+            if let Some(spec) = providers.get_mut(provider_id) {
+                spec.models.retain(|k, _| {
+                    !k.starts_with("cline-pass/") || active_cline_pass_ids.contains(k)
+                });
+            }
+        }
     }
 
     for provider_id in ["cline-pass", "cline", "openrouter"] {
@@ -237,10 +249,29 @@ fn find_upstream_reference_model(
     }
 
     let basename = stripped_free.rsplit('/').next().unwrap_or(stripped_free);
+    let suffix_match = format!("/{basename}");
+
     for prov in providers.values() {
         for cand in [stripped_pass, stripped_free, basename] {
             if let Some(m) = prov.models.get(cand) {
                 return Some(m.clone());
+            }
+        }
+        if let Some((_, m)) = prov.models.iter().find(|(k, _)| k.ends_with(&suffix_match)) {
+            return Some(m.clone());
+        }
+    }
+
+    // Fallback: if `raw_id` has a trailing 4-digit date suffix (e.g. `cline-pass/deepseek-v4.1-flash-1017`),
+    // check for the base sibling inside `cline-pass` or `openrouter`.
+    if let Some((prefix, tail)) = raw_id.rsplit_once('-') {
+        if tail.len() == 4 && tail.chars().all(|c| c.is_ascii_digit()) {
+            for prov_id in ["cline-pass", "openrouter"] {
+                if let Some(prov) = providers.get(prov_id) {
+                    if let Some(m) = prov.models.get(prefix) {
+                        return Some(m.clone());
+                    }
+                }
             }
         }
     }
@@ -372,12 +403,31 @@ fn build_enriched_model(
         .clone()
         .or_else(|| base.and_then(|b| b.release_date.clone()));
 
-    let name = entry
-        .name
-        .clone()
-        .filter(|s| !s.trim().is_empty())
-        .or_else(|| base.map(|b| b.name.clone()))
-        .unwrap_or_else(|| model_id.to_string());
+    let stripped_model_id = model_id.strip_prefix("cline-pass/").unwrap_or(model_id);
+    let basename_id = stripped_model_id
+        .rsplit('/')
+        .next()
+        .unwrap_or(stripped_model_id);
+    let entry_name = entry.name.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let entry_name_is_slug = entry_name.is_some_and(|n| {
+        n == model_id
+            || n == stripped_model_id
+            || n == basename_id
+            || entry.id.as_deref() == Some(n)
+    });
+
+    let name = if let Some(en) = entry_name.filter(|_| !entry_name_is_slug) {
+        en.to_string()
+    } else if let Some(base_name) = base.map(|b| b.name.as_str()).filter(|bn| {
+        !bn.is_empty() && Some(*bn) != base.map(|b| b.id.as_str())
+    }) {
+        base_name.to_string()
+    } else {
+        entry_name
+            .map(ToOwned::to_owned)
+            .or_else(|| base.map(|b| b.name.clone()))
+            .unwrap_or_else(|| model_id.to_string())
+    };
 
     let effective_tier = match (base.and_then(|b| b.billing_tier), tier) {
         (Some(BillingTier::Subscription), _) | (_, BillingTier::Subscription) => {

@@ -11,7 +11,7 @@ use crate::normalize::modalities::{RawModalities, sanitize_modalities};
 use crate::normalize::resolution::{
     resolve_provider_default_model, sort_model_ids_by_release_date,
 };
-use crate::types::{Cost, Limit, ModelInfo, ProviderSpec, ReasoningEffort};
+use crate::types::{BillingTier, Cost, Limit, ModelInfo, ProviderSpec, ReasoningEffort};
 
 /// Raw provider entry from `https://models.dev/api.json`.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -32,6 +32,82 @@ pub struct RawModelsDevProvider {
     pub models: BTreeMap<String, RawModelsDevModel>,
 }
 
+/// Polymorphic entry inside `models.dev`'s `reasoning_options` array.
+///
+/// Upstream `models.dev/api.json` represents `reasoning_options` either as direct effort strings
+/// (`["low", "medium", "high"]`) or as capability descriptor objects (`[{"type": "effort", "values": [...]}]`,
+/// `[{"type": "toggle"}]`, `[{"type": "budget_tokens", "min": 0, "max": 32768}]`).
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum RawReasoningOption {
+    Effort(ReasoningEffort),
+    Object {
+        #[serde(default, rename = "type")]
+        kind: Option<String>,
+        #[serde(default)]
+        values: Vec<String>,
+    },
+    Other(serde_json::Value),
+}
+
+fn parse_effort_token(s: &str) -> Option<ReasoningEffort> {
+    match s.trim().to_ascii_lowercase().as_str() {
+        "none" | "off" | "disabled" => Some(ReasoningEffort::None),
+        "minimal" | "low" => Some(ReasoningEffort::Low),
+        "medium" | "med" => Some(ReasoningEffort::Medium),
+        "high" => Some(ReasoningEffort::High),
+        "xhigh" | "x-high" | "extra_high" => Some(ReasoningEffort::XHigh),
+        "max" | "maximum" => Some(ReasoningEffort::Max),
+        _ => None,
+    }
+}
+
+pub(crate) fn extract_reasoning_efforts(
+    raw_opts: Option<&[RawReasoningOption]>,
+) -> (bool, Vec<ReasoningEffort>) {
+    let Some(opts) = raw_opts else {
+        return (false, Vec::new());
+    };
+    let mut had_any_descriptor = false;
+    let mut efforts = Vec::new();
+    let mut push_unique = |e: ReasoningEffort| {
+        if !efforts.contains(&e) {
+            efforts.push(e);
+        }
+    };
+
+    for item in opts {
+        match item {
+            RawReasoningOption::Effort(e) => {
+                had_any_descriptor = true;
+                push_unique(*e);
+            }
+            RawReasoningOption::Object { kind, values } => {
+                had_any_descriptor = true;
+                for v in values {
+                    if let Some(e) = parse_effort_token(v) {
+                        push_unique(e);
+                    }
+                }
+                if values.is_empty() && kind.as_deref() == Some("toggle") {
+                    push_unique(ReasoningEffort::None);
+                    push_unique(ReasoningEffort::High);
+                }
+            }
+            RawReasoningOption::Other(val) => {
+                if let Some(s) = val.as_str() {
+                    if let Some(e) = parse_effort_token(s) {
+                        had_any_descriptor = true;
+                        push_unique(e);
+                    }
+                }
+            }
+        }
+    }
+
+    (had_any_descriptor, efforts)
+}
+
 /// Raw model entry from `https://models.dev/api.json`.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct RawModelsDevModel {
@@ -42,9 +118,11 @@ pub struct RawModelsDevModel {
     #[serde(default)]
     pub family: Option<String>,
     #[serde(default)]
+    pub status: Option<String>,
+    #[serde(default)]
     pub reasoning: Option<bool>,
     #[serde(default, alias = "reasoning_efforts", alias = "efforts")]
-    pub reasoning_options: Option<Vec<ReasoningEffort>>,
+    pub reasoning_options: Option<Vec<RawReasoningOption>>,
     #[serde(default)]
     pub default_reasoning_effort: Option<ReasoningEffort>,
     #[serde(default)]
@@ -151,6 +229,11 @@ pub fn normalize_models_dev_map(
 
         let mut models = BTreeMap::new();
         for (model_key, raw_model) in raw_provider.models {
+            if (provider_id == "cline-pass" || provider_id == "cline")
+                && raw_model.status.as_deref() == Some("deprecated")
+            {
+                continue;
+            }
             let model_info =
                 normalize_single_model(&provider_id, &model_key, raw_model, requires_streaming);
             models.insert(model_info.id.clone(), model_info);
@@ -231,21 +314,27 @@ pub fn normalize_single_model(
             .unwrap_or(false)
     });
 
-    let supports_reasoning = raw.reasoning.unwrap_or_else(|| {
-        raw.reasoning_options
-            .as_ref()
-            .map(|opts| !opts.is_empty())
-            .unwrap_or(false)
-    });
+    let (had_reasoning_descriptor, parsed_efforts) =
+        extract_reasoning_efforts(raw.reasoning_options.as_deref());
 
-    let reasoning_options = match raw.reasoning_options {
-        Some(opts) if !opts.is_empty() => opts,
-        _ if supports_reasoning => vec![
+    let supports_reasoning = raw.reasoning.unwrap_or(had_reasoning_descriptor);
+
+    let reasoning_options = if !parsed_efforts.is_empty() {
+        parsed_efforts
+    } else if supports_reasoning {
+        vec![
             ReasoningEffort::Low,
             ReasoningEffort::Medium,
             ReasoningEffort::High,
-        ],
-        _ => Vec::new(),
+        ]
+    } else {
+        Vec::new()
+    };
+
+    let billing_tier = if provider_id == "cline-pass" {
+        Some(BillingTier::Subscription)
+    } else {
+        None
     };
 
     ModelInfo {
@@ -265,7 +354,7 @@ pub fn normalize_single_model(
         supports_tool_call: raw.tool_call.unwrap_or(false),
         supports_prompt_cache,
         release_date: raw.release_date,
-        billing_tier: None,
+        billing_tier,
         is_recommended: false,
         requires_streaming: provider_requires_streaming,
     }
