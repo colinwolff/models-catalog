@@ -1,4 +1,5 @@
 pub mod cline_feed;
+mod cline_merge;
 pub mod limits;
 pub mod modalities;
 pub mod models_dev;
