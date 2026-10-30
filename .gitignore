@@ -3,3 +3,10 @@
 /parity-harness/node_modules
 .DS_Store
 
+## gaugeblock
+# miter redb database and local cache
+**/.miter/*
+!.miter/config.toml
+*.redb
+*.redb.lock
+.gaugeblock/miter/
