@@ -1,0 +1,31 @@
+{
+  "recommended": [
+    {
+      "id": "anthropic/claude-sonnet-5",
+      "name": "Claude Sonnet 5 (Recommended)"
+    },
+    "minimax/minimax-m2.5"
+  ],
+  "free": [
+    {
+      "id": "zai-org/glm-5.3:free",
+      "name": "GLM 5.3 (Free)",
+      "contextWindow": 128000,
+      "maxTokens": 16384,
+      "supportsReasoning": true
+    }
+  ],
+  "clinePass": [
+    {
+      "id": "cline-pass/anthropic/claude-sonnet-5",
+      "name": "Claude Sonnet 5 (ClinePass)"
+    },
+    {
+      "id": "cline-pass/minimax/minimax-m2.5",
+      "name": "MiniMax M2.5 (ClinePass)",
+      "reasoningEfforts": ["none", "low", "high", "max"]
+    },
+    "cline-pass/zai-org/glm-5.3"
+  ]
+}
+

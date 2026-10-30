@@ -1,0 +1,16 @@
+{
+  "name": "models-catalog-parity-harness",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dump-oracle": "bun run dump-oracle.ts"
+  },
+  "dependencies": {
+    "@cline/llms": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
+

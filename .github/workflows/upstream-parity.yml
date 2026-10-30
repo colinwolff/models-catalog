@@ -1,0 +1,71 @@
+name: Upstream @cline/llms Parity & Drift Check
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  parity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Update @cline/llms and dump oracle
+        working-directory: parity-harness
+        continue-on-error: true
+        run: |
+          bun update @cline/llms
+          bun run dump-oracle
+
+      - name: Run Rust test suite and differential oracle parity check
+        id: cargo_test
+        continue-on-error: true
+        run: |
+          cargo test --all-features -- --nocapture 2>&1 | tee parity-test-output.log
+          exit ${PIPESTATUS[0]}
+
+      - name: Open PR if generated builtin specs updated cleanly
+        if: steps.cargo_test.outcome == 'success'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(builtins): sync generated builtin_specs.json from @cline/llms"
+          title: "chore(builtins): sync generated builtin specs from @cline/llms"
+          body: "Automated sync of `src/generated/builtin_specs.json` and `tests/fixtures/oracle-expected.json` from upstream `@cline/llms`."
+          branch: automated/sync-cline-llms-builtins
+
+      - name: Upload parity failure log artifact
+        if: steps.cargo_test.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-drift-report
+          path: parity-test-output.log
+
+      - name: Open upstream-drift issue on parity mismatch
+        if: steps.cargo_test.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('parity-test-output.log', 'utf8').slice(-4000);
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Upstream @cline/llms parity drift detected',
+              labels: ['upstream-drift'],
+              body: `Automated differential parity check (\`cargo test --test oracle_parity\`) failed against the latest \`@cline/llms\`.\n\n\`\`\`text\n${log}\n\`\`\``
+            });
+            core.setFailed('Oracle parity test failed; opened upstream-drift issue.');
+

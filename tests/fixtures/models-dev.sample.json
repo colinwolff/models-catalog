@@ -1,0 +1,308 @@
+{
+  "anthropic": {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "npm": "@ai-sdk/anthropic",
+    "api": "https://api.anthropic.com/v1",
+    "env": ["ANTHROPIC_API_KEY"],
+    "doc": "https://docs.anthropic.com",
+    "models": {
+      "claude-sonnet-5": {
+        "id": "claude-sonnet-5",
+        "name": "Claude Sonnet 5",
+        "family": "claude-sonnet",
+        "reasoning": true,
+        "reasoning_options": ["none", "low", "medium", "high", "max"],
+        "default_reasoning_effort": "medium",
+        "tool_call": true,
+        "prompt_cache": true,
+        "release_date": "2026-02-15",
+        "modalities": {
+          "input": ["text", "image", "pdf"],
+          "output": ["text"]
+        },
+        "cost": {
+          "input": 3.0,
+          "output": 15.0,
+          "reasoning": 15.0,
+          "cache_read": 0.3,
+          "cache_write": 3.75
+        },
+        "limit": {
+          "context": 1000000,
+          "input": 1000000,
+          "output": 128000
+        }
+      },
+      "claude-sonnet-4-5": {
+        "id": "claude-sonnet-4-5",
+        "name": "Claude Sonnet 4.5",
+        "family": "claude-sonnet",
+        "reasoning": true,
+        "tool_call": true,
+        "release_date": "2025-09-29",
+        "modalities": {
+          "input": ["text", "image", "pdf"],
+          "output": ["text"]
+        },
+        "cost": {
+          "input": 3.0,
+          "output": 15.0,
+          "cache_read": 0.3,
+          "cache_write": 3.75
+        },
+        "limit": {
+          "context": 200000,
+          "input": 180000,
+          "output": 64000
+        }
+      }
+    }
+  },
+  "openai": {
+    "id": "openai",
+    "name": "OpenAI",
+    "npm": "@ai-sdk/openai",
+    "api": "https://api.openai.com/v1",
+    "env": ["OPENAI_API_KEY"],
+    "models": {
+      "gpt-5.4": {
+        "id": "gpt-5.4",
+        "name": "GPT-5.4",
+        "family": "gpt-5",
+        "reasoning": true,
+        "reasoning_options": ["low", "medium", "high", "xhigh"],
+        "tool_call": true,
+        "release_date": "2026-03-01",
+        "modalities": {
+          "input": ["text", "image", "audio"],
+          "output": ["text"]
+        },
+        "cost": {
+          "input": 2.5,
+          "output": 10.0,
+          "cache_read": 1.25
+        },
+        "limit": {
+          "context": 400000,
+          "input": 272000,
+          "output": 128000
+        }
+      },
+      "gpt-image-1": {
+        "id": "gpt-image-1",
+        "name": "GPT Image 1",
+        "family": "gpt-image",
+        "reasoning": false,
+        "tool_call": false,
+        "release_date": "2026-04-01",
+        "modalities": {
+          "input": ["text", "image"],
+          "output": ["image", "text"]
+        },
+        "limit": {
+          "context": 32000,
+          "output": 4096
+        }
+      },
+      "gpt-legacy-no-limits": {
+        "id": "gpt-legacy-no-limits",
+        "name": "GPT Legacy No Limits",
+        "reasoning": false,
+        "tool_call": true,
+        "release_date": "2024-01-01",
+        "modalities": {
+          "input": ["text"],
+          "output": []
+        }
+      }
+    }
+  },
+  "openrouter": {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "api": "https://openrouter.ai/api/v1",
+    "env": ["OPENROUTER_API_KEY"],
+    "models": {
+      "anthropic/claude-sonnet-5": {
+        "id": "anthropic/claude-sonnet-5",
+        "name": "Anthropic: Claude Sonnet 5",
+        "family": "claude-sonnet",
+        "reasoning": true,
+        "reasoning_options": ["none", "low", "medium", "high", "max"],
+        "tool_call": true,
+        "release_date": "2026-02-15",
+        "modalities": {
+          "input": ["text", "image", "pdf"],
+          "output": ["text"]
+        },
+        "cost": {
+          "input": 3.0,
+          "output": 15.0
+        },
+        "limit": {
+          "context": 1000000,
+          "input": 1000000,
+          "output": 128000
+        }
+      },
+      "minimax/minimax-m2.5": {
+        "id": "minimax/minimax-m2.5",
+        "name": "MiniMax M2.5",
+        "family": "minimax",
+        "reasoning": true,
+        "reasoning_options": ["none", "low", "high", "max"],
+        "tool_call": true,
+        "release_date": "2026-02-10",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 1.2
+        },
+        "limit": {
+          "context": 202800,
+          "output": 202800
+        }
+      }
+    }
+  },
+  "amazon-bedrock": {
+    "id": "amazon-bedrock",
+    "name": "Amazon Bedrock",
+    "npm": "@ai-sdk/amazon-bedrock",
+    "env": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"],
+    "models": {
+      "minimax.minimax-m2.5": {
+        "id": "minimax.minimax-m2.5",
+        "name": "MiniMax M2.5 (Bedrock)",
+        "family": "minimax",
+        "reasoning": true,
+        "tool_call": true,
+        "release_date": "2026-02-10",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 202800,
+          "output": 202800
+        }
+      }
+    }
+  },
+  "zai": {
+    "id": "zai",
+    "name": "Z.AI",
+    "api": "https://api.z.ai/api/paas/v4",
+    "env": ["ZAI_API_KEY"],
+    "models": {
+      "zai-org/glm-5.3": {
+        "id": "zai-org/glm-5.3",
+        "name": "GLM 5.3",
+        "family": "glm",
+        "reasoning": true,
+        "reasoning_options": ["none", "low", "medium", "high"],
+        "tool_call": true,
+        "release_date": "2026-01-20",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 128000,
+          "output": 16384
+        }
+      }
+    }
+  },
+  "google": {
+    "id": "google",
+    "name": "Google Gemini",
+    "npm": "@ai-sdk/google",
+    "env": ["GEMINI_API_KEY"],
+    "models": {
+      "gemini-2.5-pro": {
+        "id": "gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "family": "gemini",
+        "reasoning": true,
+        "reasoning_options": ["none", "low", "medium", "high", "max"],
+        "tool_call": true,
+        "release_date": "2025-11-01",
+        "modalities": {
+          "input": ["text", "image", "audio", "video", "pdf"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 1000000,
+          "input": 1000000,
+          "output": 65536
+        }
+      }
+    }
+  },
+  "custom-research": {
+    "id": "custom-research",
+    "name": "Custom Research Provider",
+    "api": "https://api.research.example/v1",
+    "env": ["RESEARCH_API_KEY"],
+    "models": {
+      "zeta-old-chat": {
+        "id": "zeta-old-chat",
+        "name": "Zeta Old Chat",
+        "release_date": "2025-01-10",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 64000,
+          "output": 8192
+        }
+      },
+      "beta-newest-chat": {
+        "id": "beta-newest-chat",
+        "name": "Beta Newest Chat",
+        "release_date": "2026-05-01",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 128000,
+          "output": 16384
+        }
+      },
+      "alpha-newest-chat": {
+        "id": "alpha-newest-chat",
+        "name": "Alpha Newest Chat",
+        "release_date": "2026-05-01",
+        "modalities": {
+          "input": ["text"],
+          "output": ["text"]
+        },
+        "limit": {
+          "context": 128000,
+          "output": 16384
+        }
+      },
+      "aa-image-only-newest": {
+        "id": "aa-image-only-newest",
+        "name": "AA Image Only Newest",
+        "release_date": "2026-06-01",
+        "modalities": {
+          "input": ["text"],
+          "output": ["image"]
+        },
+        "limit": {
+          "context": 16000,
+          "output": 1024
+        }
+      }
+    }
+  }
+}
+
