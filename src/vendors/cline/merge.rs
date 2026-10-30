@@ -408,7 +408,11 @@ fn build_enriched_model(
         .rsplit('/')
         .next()
         .unwrap_or(stripped_model_id);
-    let entry_name = entry.name.as_deref().map(str::trim).filter(|s| !s.is_empty());
+    let entry_name = entry
+        .name
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
     let entry_name_is_slug = entry_name.is_some_and(|n| {
         n == model_id
             || n == stripped_model_id
@@ -418,9 +422,10 @@ fn build_enriched_model(
 
     let name = if let Some(en) = entry_name.filter(|_| !entry_name_is_slug) {
         en.to_string()
-    } else if let Some(base_name) = base.map(|b| b.name.as_str()).filter(|bn| {
-        !bn.is_empty() && Some(*bn) != base.map(|b| b.id.as_str())
-    }) {
+    } else if let Some(base_name) = base
+        .map(|b| b.name.as_str())
+        .filter(|bn| !bn.is_empty() && Some(*bn) != base.map(|b| b.id.as_str()))
+    {
         base_name.to_string()
     } else {
         entry_name

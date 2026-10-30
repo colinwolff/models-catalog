@@ -63,4 +63,3 @@ pub fn default_vendors() -> Vec<Arc<dyn VendorPlugin>> {
         Vec::new()
     }
 }
-

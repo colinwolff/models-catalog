@@ -196,4 +196,3 @@ pub fn validate_local_config(
 
     findings
 }
-

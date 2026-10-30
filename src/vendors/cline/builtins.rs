@@ -58,4 +58,3 @@ pub fn infer_provider_protocol(provider_id: &str, npm_package: Option<&str>) -> 
         },
     }
 }
-

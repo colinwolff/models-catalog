@@ -85,4 +85,3 @@ impl VendorPlugin for ClineVendor {
         Ok(())
     }
 }
-
